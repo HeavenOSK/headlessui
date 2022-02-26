@@ -31,6 +31,7 @@ import { Description, useDescriptions } from '../description/description'
 import { dom } from '../../utils/dom'
 import { useOpenClosed, State } from '../../internal/open-closed'
 import { useOutsideClick } from '../../hooks/use-outside-click'
+import { getOwnerDocument } from '../../utils/owner'
 
 enum DialogStates {
   Open,
@@ -91,6 +92,7 @@ export let Dialog = defineComponent({
 
     let containers = ref<Set<Ref<HTMLElement | null>>>(new Set())
     let internalDialogRef = ref<HTMLDivElement | null>(null)
+    let ownerDocument = computed(() => getOwnerDocument(internalDialogRef))
 
     // Validations
     let hasOpen = props.open !== Missing || usesOpenClosedState !== null
@@ -210,17 +212,20 @@ export let Dialog = defineComponent({
       if (dialogState.value !== DialogStates.Open) return
       if (hasParentDialog) return
 
-      let overflow = document.documentElement.style.overflow
-      let paddingRight = document.documentElement.style.paddingRight
+      let owner = ownerDocument.value
+      let ownerWindow = owner.defaultView ?? window
 
-      let scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+      let overflow = owner.documentElement.style.overflow
+      let paddingRight = owner.documentElement.style.paddingRight
 
-      document.documentElement.style.overflow = 'hidden'
-      document.documentElement.style.paddingRight = `${scrollbarWidth}px`
+      let scrollbarWidth = ownerWindow.innerWidth - owner.documentElement.clientWidth
+
+      owner.documentElement.style.overflow = 'hidden'
+      owner.documentElement.style.paddingRight = `${scrollbarWidth}px`
 
       onInvalidate(() => {
-        document.documentElement.style.overflow = overflow
-        document.documentElement.style.paddingRight = paddingRight
+        owner.documentElement.style.overflow = overflow
+        owner.documentElement.style.paddingRight = paddingRight
       })
     })
 

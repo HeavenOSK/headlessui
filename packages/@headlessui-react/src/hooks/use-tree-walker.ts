@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { useIsoMorphicEffect } from './use-iso-morphic-effect'
+import { getOwnerDocument } from '../utils/owner'
 
 type AcceptNode = (
   node: HTMLElement
@@ -35,8 +36,13 @@ export function useTreeWalker({
     let walk = walkRef.current
 
     let acceptNode = Object.assign((node: HTMLElement) => accept(node), { acceptNode: accept })
-    // @ts-expect-error This `false` is a simple small fix for older browsers
-    let walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, acceptNode, false)
+    let walker = getOwnerDocument(container).createTreeWalker(
+      container,
+      NodeFilter.SHOW_ELEMENT,
+      acceptNode,
+      // @ts-expect-error This `false` is a simple small fix for older browsers
+      false
+    )
 
     while (walker.nextNode()) walk(walker.currentNode as HTMLElement)
   }, [container, enabled, acceptRef, walkRef])

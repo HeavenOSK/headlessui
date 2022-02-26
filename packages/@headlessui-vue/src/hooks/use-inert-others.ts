@@ -5,6 +5,7 @@ import {
   // Types
   Ref,
 } from 'vue'
+import { getOwnerDocument } from '../utils/owner'
 
 // TODO: Figure out a nice way to attachTo document.body in the tests without automagically inserting a div with data-v-app
 let CHILDREN_SELECTOR = process.env.NODE_ENV === 'test' ? '[data-v-app=""] > *' : 'body > *'
@@ -50,26 +51,28 @@ export function useInertOthers<TElement extends HTMLElement>(
     }
 
     // Collect direct children of the body
-    document.querySelectorAll(CHILDREN_SELECTOR).forEach((child) => {
-      if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
+    getOwnerDocument(container)
+      .querySelectorAll(CHILDREN_SELECTOR)
+      .forEach((child) => {
+        if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
 
-      // Skip the interactables, and the parents of the interactables
-      for (let interactable of interactables) {
-        if (child.contains(interactable)) return
-      }
+        // Skip the interactables, and the parents of the interactables
+        for (let interactable of interactables) {
+          if (child.contains(interactable)) return
+        }
 
-      // Keep track of the elements
-      if (interactables.size === 1) {
-        originals.set(child, {
-          'aria-hidden': child.getAttribute('aria-hidden'),
-          // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
-          inert: child.inert,
-        })
+        // Keep track of the elements
+        if (interactables.size === 1) {
+          originals.set(child, {
+            'aria-hidden': child.getAttribute('aria-hidden'),
+            // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
+            inert: child.inert,
+          })
 
-        // Mutate the element
-        inert(child)
-      }
-    })
+          // Mutate the element
+          inert(child)
+        }
+      })
 
     onInvalidate(() => {
       // Inert is disabled on the current element
@@ -79,26 +82,28 @@ export function useInertOthers<TElement extends HTMLElement>(
       // will become inert as well.
       if (interactables.size > 0) {
         // Collect direct children of the body
-        document.querySelectorAll(CHILDREN_SELECTOR).forEach((child) => {
-          if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
+        getOwnerDocument(container)
+          .querySelectorAll(CHILDREN_SELECTOR)
+          .forEach((child) => {
+            if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
 
-          // Skip already inert parents
-          if (originals.has(child)) return
+            // Skip already inert parents
+            if (originals.has(child)) return
 
-          // Skip the interactables, and the parents of the interactables
-          for (let interactable of interactables) {
-            if (child.contains(interactable)) return
-          }
+            // Skip the interactables, and the parents of the interactables
+            for (let interactable of interactables) {
+              if (child.contains(interactable)) return
+            }
 
-          originals.set(child, {
-            'aria-hidden': child.getAttribute('aria-hidden'),
-            // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
-            inert: child.inert,
+            originals.set(child, {
+              'aria-hidden': child.getAttribute('aria-hidden'),
+              // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
+              inert: child.inert,
+            })
+
+            // Mutate the element
+            inert(child)
           })
-
-          // Mutate the element
-          inert(child)
-        })
       } else {
         for (let element of originals.keys()) {
           // Restore

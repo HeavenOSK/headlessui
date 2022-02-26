@@ -9,6 +9,7 @@ import { Keys } from '../components/keyboard'
 import { focusElement, focusIn, Focus, FocusResult } from '../utils/focus-management'
 import { useWindowEvent } from './use-window-event'
 import { useIsMounted } from './use-is-mounted'
+import { useOwnerDocument } from './use-owner'
 
 export enum Features {
   /** No features enabled for the `useFocusTrap` hook. */
@@ -48,14 +49,16 @@ export function useFocusTrap(
   let featuresRestoreFocus = Boolean(features & Features.RestoreFocus)
   let featuresInitialFocus = Boolean(features & Features.InitialFocus)
 
+  let ownerDocument = useOwnerDocument(container)
+
   // Capture the currently focused element, before we enable the focus trap.
   useEffect(() => {
     if (!featuresRestoreFocus) return
 
     if (!restoreElement.current) {
-      restoreElement.current = document.activeElement as HTMLElement
+      restoreElement.current = ownerDocument?.activeElement as HTMLElement
     }
-  }, [featuresRestoreFocus])
+  }, [featuresRestoreFocus, ownerDocument])
 
   // Restore the focus when we unmount the component.
   useEffect(() => {
@@ -73,7 +76,7 @@ export function useFocusTrap(
     let containerElement = container.current
     if (!containerElement) return
 
-    let activeElement = document.activeElement as HTMLElement
+    let activeElement = ownerDocument?.activeElement as HTMLElement
 
     if (initialFocus?.current) {
       if (initialFocus?.current === activeElement) {
@@ -94,8 +97,8 @@ export function useFocusTrap(
       }
     }
 
-    previousActiveElement.current = document.activeElement as HTMLElement
-  }, [container, initialFocus, featuresInitialFocus])
+    previousActiveElement.current = ownerDocument?.activeElement as HTMLElement
+  }, [container, initialFocus, featuresInitialFocus, ownerDocument])
 
   // Handle `Tab` & `Shift+Tab` keyboard events
   useWindowEvent('keydown', (event) => {
@@ -112,7 +115,7 @@ export function useFocusTrap(
         (event.shiftKey ? Focus.Previous : Focus.Next) | Focus.WrapAround
       ) === FocusResult.Success
     ) {
-      previousActiveElement.current = document.activeElement as HTMLElement
+      previousActiveElement.current = ownerDocument?.activeElement as HTMLElement
     }
   })
 

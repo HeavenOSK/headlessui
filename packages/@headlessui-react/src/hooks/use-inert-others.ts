@@ -1,4 +1,5 @@
 import { MutableRefObject } from 'react'
+import { getOwnerDocument } from '../utils/owner'
 import { useIsoMorphicEffect } from './use-iso-morphic-effect'
 
 let interactables = new Set<HTMLElement>()
@@ -42,26 +43,28 @@ export function useInertOthers<TElement extends HTMLElement>(
     }
 
     // Collect direct children of the body
-    document.querySelectorAll('body > *').forEach((child) => {
-      if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
+    getOwnerDocument(container)
+      .querySelectorAll('body > *')
+      .forEach((child) => {
+        if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
 
-      // Skip the interactables, and the parents of the interactables
-      for (let interactable of interactables) {
-        if (child.contains(interactable)) return
-      }
+        // Skip the interactables, and the parents of the interactables
+        for (let interactable of interactables) {
+          if (child.contains(interactable)) return
+        }
 
-      // Keep track of the elements
-      if (interactables.size === 1) {
-        originals.set(child, {
-          'aria-hidden': child.getAttribute('aria-hidden'),
-          // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
-          inert: child.inert,
-        })
+        // Keep track of the elements
+        if (interactables.size === 1) {
+          originals.set(child, {
+            'aria-hidden': child.getAttribute('aria-hidden'),
+            // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
+            inert: child.inert,
+          })
 
-        // Mutate the element
-        inert(child)
-      }
-    })
+          // Mutate the element
+          inert(child)
+        }
+      })
 
     return () => {
       // Inert is disabled on the current element
@@ -71,26 +74,28 @@ export function useInertOthers<TElement extends HTMLElement>(
       // will become inert as well.
       if (interactables.size > 0) {
         // Collect direct children of the body
-        document.querySelectorAll('body > *').forEach((child) => {
-          if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
+        getOwnerDocument(container)
+          .querySelectorAll('body > *')
+          .forEach((child) => {
+            if (!(child instanceof HTMLElement)) return // Skip non-HTMLElements
 
-          // Skip already inert parents
-          if (originals.has(child)) return
+            // Skip already inert parents
+            if (originals.has(child)) return
 
-          // Skip the interactables, and the parents of the interactables
-          for (let interactable of interactables) {
-            if (child.contains(interactable)) return
-          }
+            // Skip the interactables, and the parents of the interactables
+            for (let interactable of interactables) {
+              if (child.contains(interactable)) return
+            }
 
-          originals.set(child, {
-            'aria-hidden': child.getAttribute('aria-hidden'),
-            // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
-            inert: child.inert,
+            originals.set(child, {
+              'aria-hidden': child.getAttribute('aria-hidden'),
+              // @ts-expect-error `inert` does not exist on HTMLElement (yet!)
+              inert: child.inert,
+            })
+
+            // Mutate the element
+            inert(child)
           })
-
-          // Mutate the element
-          inert(child)
-        })
       } else {
         for (let element of originals.keys()) {
           // Restore

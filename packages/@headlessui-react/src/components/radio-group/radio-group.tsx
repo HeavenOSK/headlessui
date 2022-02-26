@@ -26,6 +26,7 @@ import { Label, useLabels } from '../../components/label/label'
 import { Description, useDescriptions } from '../../components/description/description'
 import { useTreeWalker } from '../../hooks/use-tree-walker'
 import { useSyncRefs } from '../../hooks/use-sync-refs'
+import { getOwnerDocument } from '../../utils/owner'
 
 interface Option {
   id: string
@@ -186,7 +187,8 @@ let RadioGroupRoot = forwardRefWithAs(function RadioGroup<
 
             if (result === FocusResult.Success) {
               let activeOption = options.find(
-                (option) => option.element.current === document.activeElement
+                (option) =>
+                  option.element.current === getOwnerDocument(option.element).activeElement
               )
               if (activeOption) triggerChange(activeOption.propsRef.current.value)
             }
@@ -203,7 +205,8 @@ let RadioGroupRoot = forwardRefWithAs(function RadioGroup<
 
             if (result === FocusResult.Success) {
               let activeOption = options.find(
-                (option) => option.element.current === document.activeElement
+                (option) =>
+                  option.element.current === getOwnerDocument(option.element).activeElement
               )
               if (activeOption) triggerChange(activeOption.propsRef.current.value)
             }
@@ -216,7 +219,7 @@ let RadioGroupRoot = forwardRefWithAs(function RadioGroup<
             event.stopPropagation()
 
             let activeOption = options.find(
-              (option) => option.element.current === document.activeElement
+              (option) => option.element.current === getOwnerDocument(option.element).activeElement
             )
             if (activeOption) triggerChange(activeOption.propsRef.current.value)
           }

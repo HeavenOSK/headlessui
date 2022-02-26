@@ -26,6 +26,7 @@ import { match } from '../../utils/match'
 import { useResolveButtonType } from '../../hooks/use-resolve-button-type'
 import { FocusableMode, isFocusableElement, sortByDomNode } from '../../utils/focus-management'
 import { useOutsideClick } from '../../hooks/use-outside-click'
+import { getOwnerDocument } from '../../utils/owner'
 
 enum ListboxStates {
   Open,
@@ -545,6 +546,7 @@ export let ListboxOption = defineComponent({
     let api = useListboxContext('ListboxOption')
     let id = `headlessui-listbox-option-${useId()}`
     let internalOptionRef = ref<HTMLElement | null>(null)
+    let ownerDocument = computed(() => getOwnerDocument(internalOptionRef))
 
     let active = computed(() => {
       return api.activeOptionIndex.value !== null
@@ -561,7 +563,7 @@ export let ListboxOption = defineComponent({
       domRef: internalOptionRef,
     }))
     onMounted(() => {
-      let textValue = document.getElementById(id)?.textContent?.toLowerCase().trim()
+      let textValue = ownerDocument.value.getElementById(id)?.textContent?.toLowerCase().trim()
       if (textValue !== undefined) dataRef.value.textValue = textValue
     })
 
@@ -575,7 +577,7 @@ export let ListboxOption = defineComponent({
           if (api.listboxState.value !== ListboxStates.Open) return
           if (!selected.value) return
           api.goToOption(Focus.Specific, id)
-          document.getElementById(id)?.focus?.()
+          ownerDocument.value.getElementById(id)?.focus?.()
         },
         { immediate: true }
       )
@@ -585,7 +587,7 @@ export let ListboxOption = defineComponent({
       if (api.listboxState.value !== ListboxStates.Open) return
       if (!active.value) return
       if (api.activationTrigger.value === ActivationTrigger.Pointer) return
-      nextTick(() => document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }))
+      nextTick(() => ownerDocument.value.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }))
     })
 
     function handleClick(event: MouseEvent) {

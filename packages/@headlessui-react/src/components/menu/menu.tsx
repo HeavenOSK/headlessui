@@ -35,6 +35,8 @@ import { useOutsideClick } from '../../hooks/use-outside-click'
 import { useTreeWalker } from '../../hooks/use-tree-walker'
 import { useOpenClosed, State, OpenClosedProvider } from '../../internal/open-closed'
 import { useResolveButtonType } from '../../hooks/use-resolve-button-type'
+import { getOwnerDocument } from '../../utils/owner'
+import { useOwnerDocument } from '../../hooks/use-owner'
 
 enum MenuStates {
   Open,
@@ -398,6 +400,7 @@ let Items = forwardRefWithAs(function Items<TTag extends ElementType = typeof DE
 ) {
   let [state, dispatch] = useMenuContext('Menu.Items')
   let itemsRef = useSyncRefs(state.itemsRef, ref)
+  let ownerDocument = useOwnerDocument(state.itemsRef)
 
   let id = `headlessui-menu-items-${useId()}`
   let searchDisposables = useDisposables()
@@ -415,10 +418,10 @@ let Items = forwardRefWithAs(function Items<TTag extends ElementType = typeof DE
     let container = state.itemsRef.current
     if (!container) return
     if (state.menuState !== MenuStates.Open) return
-    if (container === document.activeElement) return
+    if (container === ownerDocument?.activeElement) return
 
     container.focus({ preventScroll: true })
-  }, [state.menuState, state.itemsRef])
+  }, [state.menuState, state.itemsRef, ownerDocument])
 
   useTreeWalker({
     container: state.itemsRef.current,
@@ -454,7 +457,7 @@ let Items = forwardRefWithAs(function Items<TTag extends ElementType = typeof DE
           dispatch({ type: ActionTypes.CloseMenu })
           if (state.activeItemIndex !== null) {
             let { id } = state.items[state.activeItemIndex]
-            document.getElementById(id)?.click()
+            ownerDocument?.getElementById(id)?.click()
           }
           disposables().nextFrame(() => state.buttonRef.current?.focus({ preventScroll: true }))
           break
@@ -501,7 +504,7 @@ let Items = forwardRefWithAs(function Items<TTag extends ElementType = typeof DE
           break
       }
     },
-    [dispatch, searchDisposables, state]
+    [dispatch, searchDisposables, state, ownerDocument]
   )
 
   let handleKeyUp = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>) => {
@@ -571,8 +574,9 @@ let Item = forwardRefWithAs(function Item<TTag extends ElementType = typeof DEFA
   let [state, dispatch] = useMenuContext('Menu.Item')
   let id = `headlessui-menu-item-${useId()}`
   let active = state.activeItemIndex !== null ? state.items[state.activeItemIndex].id === id : false
-  let internalItemRef = useRef<HTMLElement | null>(null)
+  let internalItemRef = useRef<HTMLElement>(null)
   let itemRef = useSyncRefs(ref, internalItemRef)
+  let ownerDocument = getOwnerDocument(internalItemRef.current)
 
   useIsoMorphicEffect(() => {
     if (state.menuState !== MenuStates.Open) return
@@ -580,10 +584,10 @@ let Item = forwardRefWithAs(function Item<TTag extends ElementType = typeof DEFA
     if (state.activationTrigger === ActivationTrigger.Pointer) return
     let d = disposables()
     d.requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' })
+      ownerDocument.getElementById(id)?.scrollIntoView?.({ block: 'nearest' })
     })
     return d.dispose
-  }, [id, active, state.menuState, state.activationTrigger, /* We also want to trigger this when the position of the active item changes so that we can re-trigger the scrollIntoView */ state.activeItemIndex])
+  }, [id, active, state.menuState, ownerDocument, state.activationTrigger, /* We also want to trigger this when the position of the active item changes so that we can re-trigger the scrollIntoView */ state.activeItemIndex])
 
   let bag = useRef<MenuItemDataRef['current']>({ disabled, domRef: internalItemRef })
 
@@ -592,8 +596,8 @@ let Item = forwardRefWithAs(function Item<TTag extends ElementType = typeof DEFA
   }, [bag, disabled])
 
   useIsoMorphicEffect(() => {
-    bag.current.textValue = document.getElementById(id)?.textContent?.toLowerCase()
-  }, [bag, id])
+    bag.current.textValue = ownerDocument.getElementById(id)?.textContent?.toLowerCase()
+  }, [bag, id, ownerDocument])
 
   useIsoMorphicEffect(() => {
     dispatch({ type: ActionTypes.RegisterItem, id, dataRef: bag })

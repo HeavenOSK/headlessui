@@ -22,12 +22,14 @@ import React, {
 import { Props } from '../../types'
 import { match } from '../../utils/match'
 import { forwardRefWithAs, render, Features, PropsForFeatures } from '../../utils/render'
-import { useSyncRefs } from '../../hooks/use-sync-refs'
+import { optionalRef, useSyncRefs } from '../../hooks/use-sync-refs'
 import { useId } from '../../hooks/use-id'
 import { Keys } from '../keyboard'
 import { isDisabledReactIssue7711 } from '../../utils/bugs'
 import { OpenClosedProvider, State, useOpenClosed } from '../../internal/open-closed'
 import { useResolveButtonType } from '../../hooks/use-resolve-button-type'
+import { getOwnerDocument } from '../../utils/owner'
+import { useOwnerDocument } from '../../hooks/use-owner'
 
 enum DisclosureStates {
   Open,
@@ -155,7 +157,18 @@ let DisclosureRoot = forwardRefWithAs(function Disclosure<
   let { defaultOpen = false, ...passthroughProps } = props
   let buttonId = `headlessui-disclosure-button-${useId()}`
   let panelId = `headlessui-disclosure-panel-${useId()}`
-  let disclosureRef = useSyncRefs(ref)
+  let internalDisclosureRef = useRef<HTMLElement | null>(null)
+  let disclosureRef = useSyncRefs(
+    ref,
+    optionalRef(
+      (ref) => {
+        internalDisclosureRef.current = ref as unknown as HTMLElement | null
+      },
+      props.as === undefined ||
+        // @ts-expect-error The `as` prop _can_ be a Fragment
+        props.as === React.Fragment
+    )
+  )
 
   let reducerBag = useReducer(stateReducer, {
     disclosureState: defaultOpen ? DisclosureStates.Open : DisclosureStates.Closed,
@@ -171,13 +184,14 @@ let DisclosureRoot = forwardRefWithAs(function Disclosure<
   let close = useCallback(
     (focusableElement?: HTMLElement | MutableRefObject<HTMLElement | null>) => {
       dispatch({ type: ActionTypes.CloseDisclosure })
+      let ownerDocument = getOwnerDocument(internalDisclosureRef)
 
       let restoreElement = (() => {
-        if (!focusableElement) return document.getElementById(buttonId)
+        if (!focusableElement) return ownerDocument.getElementById(buttonId)
         if (focusableElement instanceof HTMLElement) return focusableElement
         if (focusableElement.current instanceof HTMLElement) return focusableElement.current
 
-        return document.getElementById(buttonId)
+        return ownerDocument.getElementById(buttonId)
       })()
 
       restoreElement?.focus()
@@ -234,6 +248,7 @@ let Button = forwardRefWithAs(function Button<TTag extends ElementType = typeof 
   let [state, dispatch] = useDisclosureContext('Disclosure.Button')
   let internalButtonRef = useRef<HTMLButtonElement | null>(null)
   let buttonRef = useSyncRefs(internalButtonRef, ref)
+  let ownerDocument = useOwnerDocument(internalButtonRef)
 
   let panelContext = useDisclosurePanelContext()
   let isWithinPanel = panelContext === null ? false : panelContext === state.panelId
@@ -249,7 +264,7 @@ let Button = forwardRefWithAs(function Button<TTag extends ElementType = typeof 
             event.preventDefault()
             event.stopPropagation()
             dispatch({ type: ActionTypes.ToggleDisclosure })
-            document.getElementById(state.buttonId)?.focus()
+            ownerDocument?.getElementById(state.buttonId)?.focus()
             break
         }
       } else {
@@ -263,7 +278,7 @@ let Button = forwardRefWithAs(function Button<TTag extends ElementType = typeof 
         }
       }
     },
-    [dispatch, isWithinPanel, state.disclosureState, state.buttonId]
+    [dispatch, isWithinPanel, state.disclosureState, state.buttonId, ownerDocument]
   )
 
   let handleKeyUp = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>) => {
@@ -284,12 +299,12 @@ let Button = forwardRefWithAs(function Button<TTag extends ElementType = typeof 
 
       if (isWithinPanel) {
         dispatch({ type: ActionTypes.ToggleDisclosure })
-        document.getElementById(state.buttonId)?.focus()
+        ownerDocument?.getElementById(state.buttonId)?.focus()
       } else {
         dispatch({ type: ActionTypes.ToggleDisclosure })
       }
     },
-    [dispatch, props.disabled, state.buttonId, isWithinPanel]
+    [dispatch, props.disabled, state.buttonId, isWithinPanel, ownerDocument]
   )
 
   let slot = useMemo<ButtonRenderPropArg>(

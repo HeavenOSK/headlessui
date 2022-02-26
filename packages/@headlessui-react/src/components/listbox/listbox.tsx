@@ -33,6 +33,8 @@ import { isFocusableElement, FocusableMode, sortByDomNode } from '../../utils/fo
 import { useOpenClosed, State, OpenClosedProvider } from '../../internal/open-closed'
 import { useResolveButtonType } from '../../hooks/use-resolve-button-type'
 import { useOutsideClick } from '../../hooks/use-outside-click'
+import { getOwnerDocument } from '../../utils/owner'
+import { useOwnerDocument } from '../../hooks/use-owner'
 
 enum ListboxStates {
   Open,
@@ -530,7 +532,7 @@ let Options = forwardRefWithAs(function Options<
     let container = state.optionsRef.current
     if (!container) return
     if (state.listboxState !== ListboxStates.Open) return
-    if (container === document.activeElement) return
+    if (container === getOwnerDocument(container).activeElement) return
 
     container.focus({ preventScroll: true })
   }, [state.listboxState, state.optionsRef])
@@ -675,7 +677,8 @@ let Option = forwardRefWithAs(function Option<
   let active =
     state.activeOptionIndex !== null ? state.options[state.activeOptionIndex].id === id : false
   let selected = state.propsRef.current.value === value
-  let internalOptionRef = useRef<HTMLElement | null>(null)
+  let internalOptionRef = useRef<HTMLLIElement | null>(null)
+  let ownerDocument = useOwnerDocument(internalOptionRef)
   let optionRef = useSyncRefs(ref, internalOptionRef)
 
   let bag = useRef<ListboxOptionDataRef['current']>({ disabled, value, domRef: internalOptionRef })
@@ -687,8 +690,8 @@ let Option = forwardRefWithAs(function Option<
     bag.current.value = value
   }, [bag, value])
   useIsoMorphicEffect(() => {
-    bag.current.textValue = document.getElementById(id)?.textContent?.toLowerCase()
-  }, [bag, id])
+    bag.current.textValue = ownerDocument?.getElementById(id)?.textContent?.toLowerCase()
+  }, [bag, id, ownerDocument])
 
   let select = useCallback(() => state.propsRef.current.onChange(value), [state.propsRef, value])
 
@@ -701,8 +704,8 @@ let Option = forwardRefWithAs(function Option<
     if (state.listboxState !== ListboxStates.Open) return
     if (!selected) return
     dispatch({ type: ActionTypes.GoToOption, focus: Focus.Specific, id })
-    document.getElementById(id)?.focus?.()
-  }, [state.listboxState])
+    ownerDocument?.getElementById(id)?.focus?.()
+  }, [state.listboxState, ownerDocument])
 
   useIsoMorphicEffect(() => {
     if (state.listboxState !== ListboxStates.Open) return
@@ -710,10 +713,10 @@ let Option = forwardRefWithAs(function Option<
     if (state.activationTrigger === ActivationTrigger.Pointer) return
     let d = disposables()
     d.requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' })
+      ownerDocument?.getElementById(id)?.scrollIntoView?.({ block: 'nearest' })
     })
     return d.dispose
-  }, [id, active, state.listboxState, state.activationTrigger, /* We also want to trigger this when the position of the active item changes so that we can re-trigger the scrollIntoView */ state.activeOptionIndex])
+  }, [id, active, state.listboxState, ownerDocument, state.activationTrigger, /* We also want to trigger this when the position of the active item changes so that we can re-trigger the scrollIntoView */ state.activeOptionIndex])
 
   let handleClick = useCallback(
     (event: { preventDefault: Function }) => {

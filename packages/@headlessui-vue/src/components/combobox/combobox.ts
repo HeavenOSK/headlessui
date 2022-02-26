@@ -28,6 +28,7 @@ import { useResolveButtonType } from '../../hooks/use-resolve-button-type'
 import { useTreeWalker } from '../../hooks/use-tree-walker'
 import { sortByDomNode } from '../../utils/focus-management'
 import { useOutsideClick } from '../../hooks/use-outside-click'
+import { getOwnerDocument } from '../../utils/owner'
 
 enum ComboboxStates {
   Open,
@@ -644,6 +645,7 @@ export let ComboboxOption = defineComponent({
     let api = useComboboxContext('ComboboxOption')
     let id = `headlessui-combobox-option-${useId()}`
     let internalOptionRef = ref<HTMLElement | null>(null)
+    let ownerDocument = computed(() => getOwnerDocument(internalOptionRef))
 
     let active = computed(() => {
       return api.activeOptionIndex.value !== null
@@ -678,7 +680,7 @@ export let ComboboxOption = defineComponent({
       if (api.comboboxState.value !== ComboboxStates.Open) return
       if (!active.value) return
       if (api.activationTrigger.value === ActivationTrigger.Pointer) return
-      nextTick(() => document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }))
+      nextTick(() => ownerDocument.value.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }))
     })
 
     function handleClick(event: MouseEvent) {

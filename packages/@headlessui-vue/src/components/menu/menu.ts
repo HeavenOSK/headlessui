@@ -24,6 +24,7 @@ import { match } from '../../utils/match'
 import { useResolveButtonType } from '../../hooks/use-resolve-button-type'
 import { FocusableMode, isFocusableElement, sortByDomNode } from '../../utils/focus-management'
 import { useOutsideClick } from '../../hooks/use-outside-click'
+import { getOwnerDocument } from '../../utils/owner'
 
 enum MenuStates {
   Open,
@@ -334,6 +335,7 @@ export let MenuItems = defineComponent({
     let api = useMenuContext('MenuItems')
     let id = `headlessui-menu-items-${useId()}`
     let searchDebounce = ref<ReturnType<typeof setTimeout> | null>(null)
+    let ownerDocument = computed(() => getOwnerDocument(api.buttonRef))
 
     useTreeWalker({
       container: computed(() => dom(api.itemsRef)),
@@ -367,7 +369,7 @@ export let MenuItems = defineComponent({
           event.stopPropagation()
           if (api.activeItemIndex.value !== null) {
             let { id } = api.items.value[api.activeItemIndex.value]
-            document.getElementById(id)?.click()
+            ownerDocument.value.getElementById(id)?.click()
           }
           api.closeMenu()
           nextTick(() => dom(api.buttonRef)?.focus({ preventScroll: true }))
@@ -477,6 +479,7 @@ export let MenuItem = defineComponent({
     let api = useMenuContext('MenuItem')
     let id = `headlessui-menu-item-${useId()}`
     let internalItemRef = ref<HTMLElement | null>(null)
+    let ownerDocument = computed(() => getOwnerDocument(internalItemRef))
 
     let active = computed(() => {
       return api.activeItemIndex.value !== null
@@ -490,7 +493,7 @@ export let MenuItem = defineComponent({
       domRef: internalItemRef,
     }))
     onMounted(() => {
-      let textValue = document.getElementById(id)?.textContent?.toLowerCase().trim()
+      let textValue = ownerDocument.value.getElementById(id)?.textContent?.toLowerCase().trim()
       if (textValue !== undefined) dataRef.value.textValue = textValue
     })
 
@@ -501,7 +504,7 @@ export let MenuItem = defineComponent({
       if (api.menuState.value !== MenuStates.Open) return
       if (!active.value) return
       if (api.activationTrigger.value === ActivationTrigger.Pointer) return
-      nextTick(() => document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }))
+      nextTick(() => ownerDocument.value.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }))
     })
 
     function handleClick(event: MouseEvent) {

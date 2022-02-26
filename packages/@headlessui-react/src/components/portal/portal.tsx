@@ -18,30 +18,36 @@ import { useIsoMorphicEffect } from '../../hooks/use-iso-morphic-effect'
 import { usePortalRoot } from '../../internal/portal-force-root'
 import { useServerHandoffComplete } from '../../hooks/use-server-handoff-complete'
 import { useSyncRefs } from '../../hooks/use-sync-refs'
+import { useOwnerDocument } from '../../hooks/use-owner'
 
-function usePortalTarget(): HTMLElement | null {
+function usePortalTarget(ref: MutableRefObject<HTMLElement>): HTMLElement | null {
   let forceInRoot = usePortalRoot()
   let groupTarget = useContext(PortalGroupContext)
+
+  let ownerDocument = useOwnerDocument(ref)
+
   let [target, setTarget] = useState(() => {
     // Group context is used, but still null
     if (!forceInRoot && groupTarget !== null) return null
 
     // No group context is used, let's create a default portal root
     if (typeof window === 'undefined') return null
-    let existingRoot = document.getElementById('headlessui-portal-root')
+    let existingRoot = ownerDocument?.getElementById('headlessui-portal-root')
     if (existingRoot) return existingRoot
 
-    let root = document.createElement('div')
+    if (ownerDocument === null) return null
+
+    let root = ownerDocument.createElement('div')
     root.setAttribute('id', 'headlessui-portal-root')
-    return document.body.appendChild(root)
+    return ownerDocument.body.appendChild(root)
   })
 
   // Ensure the portal root is always in the DOM
   useEffect(() => {
     if (target === null) return
 
-    if (!document.body.contains(target)) {
-      document.body.appendChild(target)
+    if (!ownerDocument?.body.contains(target)) {
+      ownerDocument?.body.appendChild(target)
     }
   }, [target])
 
@@ -63,11 +69,14 @@ let PortalRoot = forwardRefWithAs(function Portal<
   TTag extends ElementType = typeof DEFAULT_PORTAL_TAG
 >(props: Props<TTag, PortalRenderPropArg>, ref: Ref<HTMLElement>) {
   let passthroughProps = props
-  let target = usePortalTarget()
-  let [element] = useState<HTMLDivElement | null>(() =>
-    typeof window === 'undefined' ? null : document.createElement('div')
-  )
   let portalRef = useSyncRefs(ref)
+  // @ts-expect-error figure out the correct type here,
+  let ownerDocument = useOwnerDocument(ref)
+  // @ts-expect-error figure out the correct type here,
+  let target = usePortalTarget(ref)
+  let [element] = useState<HTMLDivElement | null>(() =>
+    typeof window === 'undefined' ? null : ownerDocument?.createElement('div') ?? null
+  )
 
   let ready = useServerHandoffComplete()
 
