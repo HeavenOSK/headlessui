@@ -1,4 +1,4 @@
-import { Ref, ComponentPublicInstance } from 'vue'
+import { Ref, ComponentPublicInstance } from '@vue/composition-api'
 
 export function dom<T extends HTMLElement | ComponentPublicInstance>(
   ref?: Ref<T | null>

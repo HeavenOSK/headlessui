@@ -14,7 +14,7 @@ import {
   InjectionKey,
   Ref,
   ConcreteComponent,
-} from 'vue'
+} from '@vue/composition-api'
 
 import { useId } from '../../hooks/use-id'
 import { match } from '../../utils/match'

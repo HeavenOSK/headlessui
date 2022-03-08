@@ -1,4 +1,4 @@
-import { watchEffect, ComputedRef } from 'vue'
+import { watchEffect, ComputedRef } from '@vue/composition-api'
 
 type AcceptNode = (
   node: HTMLElement

@@ -8,7 +8,7 @@ import {
   InjectionKey,
   Ref,
   computed,
-} from 'vue'
+} from '@vue/composition-api'
 
 import { render } from '../../utils/render'
 import { useId } from '../../hooks/use-id'

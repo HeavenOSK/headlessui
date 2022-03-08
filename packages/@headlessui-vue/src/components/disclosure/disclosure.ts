@@ -8,7 +8,7 @@ import {
   Ref,
   computed,
   watchEffect,
-} from 'vue'
+} from '@vue/composition-api'
 
 import { Keys } from '../../keyboard'
 import { match } from '../../utils/match'

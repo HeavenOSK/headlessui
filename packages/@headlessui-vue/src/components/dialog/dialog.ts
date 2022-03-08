@@ -15,7 +15,7 @@ import {
   InjectionKey,
   PropType,
   Ref,
-} from 'vue'
+} from '@vue/composition-api'
 
 import { render, Features } from '../../utils/render'
 import { Keys } from '../../keyboard'

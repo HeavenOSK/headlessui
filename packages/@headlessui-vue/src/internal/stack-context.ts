@@ -7,7 +7,7 @@ import {
   // Types
   InjectionKey,
   Ref,
-} from 'vue'
+} from '@vue/composition-api'
 
 type OnUpdate = (message: StackMessage, type: string, element: Ref<HTMLElement | null>) => void
 

@@ -14,7 +14,7 @@ import {
   toRaw,
   watch,
   UnwrapNestedRefs,
-} from 'vue'
+} from '@vue/composition-api'
 
 import { Features, render, omit } from '../../utils/render'
 import { useId } from '../../hooks/use-id'

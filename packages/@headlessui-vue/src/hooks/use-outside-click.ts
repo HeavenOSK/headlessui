@@ -1,5 +1,5 @@
 import { useWindowEvent } from './use-window-event'
-import { Ref } from 'vue'
+import { Ref } from '@vue/composition-api'
 import { dom } from '../utils/dom'
 
 // Polyfill

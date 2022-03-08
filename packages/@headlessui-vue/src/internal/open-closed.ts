@@ -5,7 +5,7 @@ import {
   // Types
   InjectionKey,
   Ref,
-} from 'vue'
+} from '@vue/composition-api'
 
 let Context = Symbol('Context') as InjectionKey<Ref<State>>
 

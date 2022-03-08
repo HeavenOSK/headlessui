@@ -5,7 +5,7 @@ import {
 
   // Types
   InjectionKey,
-} from 'vue'
+} from '@vue/composition-api'
 import { render } from '../utils/render'
 
 let ForcePortalRootContext = Symbol('ForcePortalRootContext') as InjectionKey<Boolean>

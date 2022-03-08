@@ -12,7 +12,7 @@ import {
   watchEffect,
   ComputedRef,
   UnwrapNestedRefs,
-} from 'vue'
+} from '@vue/composition-api'
 import { Features, render } from '../../utils/render'
 import { useId } from '../../hooks/use-id'
 import { Keys } from '../../keyboard'

@@ -1,4 +1,4 @@
-import { ref, onMounted, watchEffect, Ref } from 'vue'
+import { ref, onMounted, watchEffect, Ref } from '@vue/composition-api'
 import { dom } from '../utils/dom'
 
 function resolveType(type: unknown, as: string | object) {

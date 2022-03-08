@@ -10,7 +10,7 @@ import {
   InjectionKey,
   Ref,
   computed,
-} from 'vue'
+} from '@vue/composition-api'
 
 import { match } from '../../utils/match'
 import { render, Features } from '../../utils/render'

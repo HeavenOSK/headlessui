@@ -12,7 +12,7 @@ import {
   // Types
   InjectionKey,
   PropType,
-} from 'vue'
+} from '@vue/composition-api'
 import { render } from '../../utils/render'
 import { usePortalRoot } from '../../internal/portal-force-root'
 

@@ -1,4 +1,4 @@
-import { watchEffect } from 'vue'
+import { watchEffect } from '@vue/composition-api'
 
 export function useWindowEvent<TType extends keyof WindowEventMap>(
   type: TType,
